@@ -15,8 +15,9 @@ name:                   ICFP2015
 library
     build-depends:      base                 >=4.6  && <5
                       , aeson                >=0.9  && <1.0
-                      , text                 >=1.2  && <1.3
+                      , filepath             >=1.4  && <1.5
                       , optparse-applicative >=0.11 && <0.12
+                      , text                 >=1.2  && <1.3
     default-language:   Haskell2010
     exposed-modules:    ICFP2015
     ghc-options:        -Wall
