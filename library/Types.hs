@@ -13,7 +13,7 @@ data Move = E  -- ^ east
 data Turn = CW  -- ^ clockwise
           | ACW -- ^ anticlockwise
 
-data Point = Point { getX :: Int, getY :: Int }
+data Point = Point { getX :: Int, getY :: Int } deriving Show
 
 data Vect = Vect { getE :: Int, getSW :: Int } deriving Show
 
@@ -27,6 +27,11 @@ instance AffineSpace Point where
   Point x y .+^ Vect e sw = Point x' y' where
     y' = y + sw
     x' = x + e - sw + case (parity y, parity y') of
+                       (Even, Odd) -> 0
+                       _           -> 1
+  Point x' y' .-. Point x y = Vect e sw where
+    sw = y' - y
+    e = x' - x + sw - case (parity y, parity y') of
                        (Even, Odd) -> 0
                        _           -> 1
 
