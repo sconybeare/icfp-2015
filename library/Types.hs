@@ -2,8 +2,8 @@
 
 module Types where
 
-import Data.AffineSpace
-import Data.AdditiveGroup
+import           Data.AdditiveGroup
+import           Data.AffineSpace
 
 data Move = E  -- ^ east
           | W  -- ^ west
@@ -31,6 +31,6 @@ instance AffineSpace Point where
                        _           -> 1
 
 parity :: Integral a => a -> Parity
-parity n = if mod n 2 == 0 then Even else Odd
-                           
+parity n = if n `mod` 2 == 0 then Even else Odd
+
 data Parity = Even | Odd
