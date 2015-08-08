@@ -7,18 +7,18 @@ import Data.Aeson
 import Control.Applicative
 import Control.Monad (mzero)
 
-data Input = Input { id :: Int
-                   , units :: [Piece]
-                   , width :: Int
-                   , height :: Int
-                   , filled :: [Cell]
-                   , sourceLength :: Int
-                   , sourceSeeds :: [Int]
+data Input = Input { getId :: Int
+                   , getUnits :: [InputUnit]
+                   , getWidth :: Int
+                   , getHeight :: Int
+                   , getFilled :: [InputCell]
+                   , getSourceLength :: Int
+                   , getSourceSeeds :: [Int]
                    }
 
-data Cell = Cell { x :: Int , y :: Int }
+data InputCell = InputCell { getX :: Int , getY :: Int }
 
-data Piece = Piece { members :: [Cell] , pivot :: Cell }
+data InputUnit = InputUnit { getMembers :: [InputCell] , getPivot :: InputCell }
 
 instance FromJSON Input where
   parseJSON (Object v) = Input <$>
@@ -31,14 +31,14 @@ instance FromJSON Input where
                          v .: "sourceSeeds"
   parseJSON _ =          mzero
 
-instance FromJSON Cell where
-  parseJSON (Object v) = Cell <$>
+instance FromJSON InputCell where
+  parseJSON (Object v) = InputCell <$>
                          v .: "x" <*>
                          v .: "y"
   parseJSON _ =          mzero
 
-instance FromJSON Piece where
-  parseJSON (Object v) = Piece <$>
+instance FromJSON InputUnit where
+  parseJSON (Object v) = InputUnit <$>
                          v .: "members" <*>
                          v .: "pivot"
   parseJSON _ =          mzero
