@@ -24,11 +24,6 @@ make configure
 make build
 ```
 
-# Test package.
-```console
-make test
-```
-
 # Run executable.
 ```console
 make run
@@ -41,9 +36,4 @@ make repl
 # Generate documentation.
 ```console
 make haddock
-```
-
-# Analyze coverage.
-```console
-make hpc
 ```

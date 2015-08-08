@@ -1,6 +1,6 @@
-.PHONY: all build clean configure haddock hpc install repl run test
+.PHONY: all build clean configure haddock hpc install repl run
 shell = '$$SHELL'
-all: install configure build haddock test hpc
+all: install configure build haddock hpc
 
 build:
 	cabal build --jobs
@@ -18,13 +18,9 @@ haddock:
 	cabal haddock --hyperlink-source
 # dist/doc/html/./index.html
 
-hpc:
-	hpc markup --destdir=tmp dist/hpc/tix/tests/tests.tix
-# tmp/hpc_index.html
-
 install:
 	cabal sandbox init
-	cabal install --enable-tests --jobs --only-dependencies --reorder-goals
+	cabal install --jobs --only-dependencies --reorder-goals
 
 nix-clean:
 	if test -e default.nix; then rm default.nix; fi
@@ -35,7 +31,7 @@ nix-init: clean
 	[ `cabal2nix --version` = "2.0" ] && cabal2nix . > default.nix;
 
 nix-shell: nix-init
-	nix-shell --command 'make install && IN_NIX="nix " $(shell)'
+	nix-shell --command 'make install && $(shell)'
 	make clean
 
 repl:
@@ -43,12 +39,6 @@ repl:
 
 run:
 	cabal run --jobs .
-
-test:
-	rm -f *.tix
-	cabal test --jobs
-	cabal check
-	rm -f *.tix
 
 tags:
 	hasktags -e .
