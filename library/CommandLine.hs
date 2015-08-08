@@ -30,7 +30,7 @@ data Options =
           , getMemoryLimit :: Maybe Int  -- ^ # of MB of RAM available
           , getCores       :: Maybe Int  -- ^ # of cores     available
           , getPhrases     :: [Text]     -- ^ phrases of power
-          } deriving (Show, Read)
+          } deriving (Eq, Show, Read)
 
 
 --------------------------------------------------------------------------------
