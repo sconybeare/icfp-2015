@@ -16,7 +16,7 @@ import           System.Random
 --------------------------------------------------------------------------------
 
 
-data LCGGen = LCGGen [Int] deriving (Eq, Show, Read)
+newtype LCGGen = LCGGen [Int] deriving (Eq, Show, Read)
 
 instance RandomGen LCGGen where
   next (LCGGen (x:xs)) = (x, LCGGen xs)
