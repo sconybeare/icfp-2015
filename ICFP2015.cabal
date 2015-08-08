@@ -20,8 +20,8 @@ library
                       , text                 >=1.2  && <1.3
     default-language:   Haskell2010
     exposed-modules:    ICFP2015
+                      , CommandLine
     ghc-options:        -Wall
-    ghc-prof-options:   -auto-all -prof
     hs-source-dirs:     library
     default-extensions: OverloadedStrings
 
@@ -30,7 +30,5 @@ executable ICFP2015
                       , ICFP2015
     default-language:   Haskell2010
     ghc-options:        -threaded
-    ghc-prof-options:   -auto-all -prof
     hs-source-dirs:     executable
     main-is:            Main.hs
-    default-extensions: OverloadedStrings

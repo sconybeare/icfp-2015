@@ -86,21 +86,21 @@ timeLimitOpt   = opt $ short     't'
 
 memoryLimitOpt = opt $ short     'm'
                     <> long      "memory"
-                    <> metavar   "NAT-MEGABYTES"
+                    <> metavar   "NUM-MB"
                     <> help      "Memory limit in megabytes."
   where
     opt = optional . option auto
 
 coresOpt       = opt $ short     'c'
                     <> long      "cores"
-                    <> metavar   "NAT-CORES"
+                    <> metavar   "NUM-CORES"
                     <> help      "Number of cores on the current machine."
   where
     opt = optional . option auto
 
 phrasesOpt     = opt $ short     'p'
                     <> long      "phrase"
-                    <> metavar   "PHRASE-STRING"
+                    <> metavar   "PHRASE"
                     <> helpMulti "Phrase of power to specify"
   where
     opt = asum <.> optional . many . pack <.> strOption
