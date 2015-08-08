@@ -1,6 +1,6 @@
-.PHONY: all build clean configure haddock hpc install repl run
+.PHONY: all build clean configure haddock install repl run tags
 shell = '$$SHELL'
-all: install configure build haddock hpc
+all: install configure build haddock tags
 
 build:
 	cabal build --jobs
@@ -35,7 +35,7 @@ nix-shell: nix-init
 	make clean
 
 repl:
-	cabal repl lib:.
+	cabal repl lib:ICFP2015
 
 run:
 	cabal run --jobs .
