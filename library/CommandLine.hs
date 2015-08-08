@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveDataTypeable #-}
-
 -- | Process command-line arguments
 module CommandLine (Options (..), handleOptions) where
 
