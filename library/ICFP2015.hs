@@ -4,9 +4,10 @@
 module ICFP2015 (module ICFP2015) where
 
 import           CommandLine
+import           Input
 
 -- | Main entry point of application
 main :: IO ()
 main = do
-  opts <- getOptions
-  print opts
+  input <- getInput
+  print input

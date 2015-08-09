@@ -16,7 +16,6 @@ import           Data.AffineSpace
 import           CommandLine
 import           GameState
 import           Parse
-import           Random
 import           Types
 import           Utility
 
@@ -41,8 +40,10 @@ data Input = Input { getId          :: Int
 
 
 getInput :: IO [Input]
-getInput = do
-  opts <- getOptions
+getInput = getOptions >>= generateInput
+
+generateInput :: Options -> IO [Input]
+generateInput opts = do
   json <- processAllJSON (optFiles opts)
   return $ map (processInput opts) json
 
