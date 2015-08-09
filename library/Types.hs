@@ -3,17 +3,19 @@
 module Types where
 
 import           Data.AdditiveGroup
+import           Data.VectorSpace
 import           Data.AffineSpace
 
-data Move = E  -- ^ east
-          | W  -- ^ west
-          | SE -- ^ southeast
-          | SW -- ^ southwest
+data Trans = E  -- ^ east
+           | W  -- ^ west
+           | SE -- ^ southeast
+           | SW -- ^ southwest
 
 data Turn = CW  -- ^ clockwise
           | ACW -- ^ anticlockwise
 
-data Point = Point { getX :: Int, getY :: Int } deriving Show
+data Point = Point { getX :: Int, getY :: Int } deriving (Show, Ord, Eq)
+
 
 data Vect = Vect { getE :: Int, getSW :: Int } deriving Show
 
@@ -21,6 +23,10 @@ instance AdditiveGroup Vect where
   zeroV = Vect 0 0
   Vect x1 y1 ^+^ Vect x2 y2 = Vect (x1+x2) (y1+y2)
   negateV (Vect x1 y1) = Vect (-x1) (-y1)
+
+instance VectorSpace Vect where
+  type Scalar Vect = Int
+  c *^ Vect x y = Vect (c*x) (c*y)
 
 instance AffineSpace Point where
   type Diff Point = Vect
