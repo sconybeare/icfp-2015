@@ -2,17 +2,47 @@ module GameState ( CellState (..)
                  , BoardState
                  , accessCell
                  , lock
+                 , CWRotation
+                 , cwRot
+                 , GameSetup (..)
+                 , BoardDimensions (..)
+                 , GameState (..)
+                 , PieceId
+                 , fromCWRot
                  ) where
 
 import           Data.AffineSpace
-import           GameSetup        (BoardDimensions (..), Piece (..))
-import           Types            (Point (..))
+import           Types            (Point (..), Vect)
+
+data GameSetup = GameSetup { getDimensions :: BoardDimensions
+                           , getPieces :: [Piece]
+                           , getSeed :: Int
+                           , getLayout :: BoardState
+                           }
+data BoardDimensions = BDim { getWidth :: Int, getHeight :: Int }
+
+newtype Piece = Piece [Vect]
 
 data CellState = Empty | Full
                deriving (Eq, Enum, Show, Read)
 
 newtype BoardState = BState [[CellState]]
                    deriving (Eq, Show, Read)
+
+data GameState = GState { getBoardState :: BoardState
+                        , getPieceCount :: Int
+                        , getPieceId :: PieceId
+                        , getPieceLoc :: Point
+                        , getPieceOrientation :: CWRotation
+                        }
+
+newtype PieceId = PieceId Int
+
+newtype CWRotation = CWRot Int
+cwRot :: Int -> CWRotation
+cwRot x = CWRot $ x `mod` 6
+fromCWRot :: Integral a => CWRotation -> a
+fromCWRot (CWRot x) = fromIntegral x
 
 accessCell :: BoardState -> Point -> CellState
 accessCell _ _ = undefined
