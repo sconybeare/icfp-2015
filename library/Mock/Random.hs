@@ -1,8 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
--- | Generate random numbers for the mock server
-module Mock.Random (LCGGen, mkLCGGen) where
-
+-- | Generate random numbers
+module Random (LCGGen, mkLCGGen) where
 
 --------------------------------------------------------------------------------
 ------------------------------------ Header ------------------------------------
