@@ -1,95 +1,125 @@
-module GameState ( CellState (..)
-                 , BoardState
-                 , accessCell
-                 , lock
-                 , ACWRotation
-                 , cwRot
-                 , GameSetup (..)
+module GameState ( CellState       (..)
+                 , GameSetup       (..)
                  , BoardDimensions (..)
-                 , GameState (..)
-                 , PieceId (..)
-                 , fromCWRot
-                 , Piece (..)
+                 , GameState       (..)
+                 , PieceId         (..)
+                 , Piece           (..)
+                 , ACWRotation,    fromACWRot, mkACWRot
+                 , BoardState,     accessCell, lock
                  ) where
 
+
+--------------------------------------------------------------------------------
+------------------------------------ Header ------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- Imports
 import           Data.AffineSpace
-import           Types            (Point (..), Vect)
-import qualified Data.Map.Strict as M
+import           Data.Map.Strict  (Map)
+import qualified Data.Map.Strict  as M
+import           Types            (BVect, Point (..))
 
-data GameSetup = GameSetup { getDimensions :: BoardDimensions
-                           , getPieces :: [Piece]
-                           , getSeed :: Int
-                           , getLayout :: BoardState
-                           }
-data BoardDimensions = BDim { getWidth :: Int, getHeight :: Int }
 
-newtype Piece = Piece [Vect]
+--------------------------------------------------------------------------------
+------------------------------------ Types -------------------------------------
+--------------------------------------------------------------------------------
 
-data CellState = Empty | Full
+
+-- | The state of a cell
+data CellState = Empty -- ^ The cell is empty
+               | Full  -- ^ The cell is full
                deriving (Eq, Enum, Show, Read)
 
-newtype BoardState = BState (M.Map Point CellState)
-                   deriving (Show)
+-- | The dimensions of a board
+data BoardDimensions = BDim { getWidth  :: Int
+                            , getHeight :: Int
+                            } deriving (Eq, Show, Read)
 
-data GameState = GState { getBoardState :: BoardState
-                        , getPieceCount :: Int
-                        , getPieceId :: PieceId
-                        , getPieceLoc :: Point
+-- | A piece is a list of 'BVect's, which are all relative to the pivot.
+newtype Piece = Piece [BVect]
+              deriving (Eq, Show, Read)
+
+-- | The state of a board, in terms of which cells are enabled or disabled
+newtype BoardState = BState (Map Point CellState)
+                   deriving (Eq, Show, Read)
+
+-- | Static information for a game
+data GameSetup = GameSetup { getDimensions :: BoardDimensions
+                           , getPieces     :: [Piece]
+                           , getSeed       :: Int
+                           , getLayout     :: BoardState
+                           } deriving (Eq, Show, Read)
+
+-- | Game state
+data GameState = GState { getBoardState       :: BoardState
+                        , getPieceCount       :: Int
+                        , getPieceId          :: PieceId
+                        , getPieceLoc         :: Point
                         , getPieceOrientation :: ACWRotation
-                        }
+                        } deriving (Eq, Show, Read)
 
+-- | ID of a Piece
 newtype PieceId = PieceId Int
+                deriving (Eq, Show, Read)
 
-newtype ACWRotation = CWRot Int
-cwRot :: Int -> ACWRotation
-cwRot x = CWRot $ x `mod` 6
-fromCWRot :: Integral a => ACWRotation -> a
-fromCWRot (CWRot x) = fromIntegral x
+-- | Anticlockwise rotation amount
+newtype ACWRotation = ACWRot { fromACWRot :: Int
+                             } deriving (Eq, Show, Read)
 
+
+--------------------------------------------------------------------------------
+------------------------------- Public functions -------------------------------
+--------------------------------------------------------------------------------
+
+
+-- | Turn a number of anticlockwise turns into an 'ACWRotation'
+mkACWRot :: Int -> ACWRotation
+mkACWRot x = ACWRot $ x `mod` 6
+
+-- | Access a cell at a point in a board with the given state and dimensions
 accessCell :: BoardDimensions -> BoardState -> Point -> Maybe CellState
 accessCell dim bst pt
-  | insideBounds dim pt
-  , BState cells <- bst
-    = M.lookup pt cells
-  | not $ insideBounds dim pt
-    = Nothing
+  | insideBounds dim pt, BState cells <- bst = M.lookup pt cells
+  | otherwise                                = Nothing
 
+-- | "Lock" a piece into a board with the given state and dimensions
 lock :: BoardDimensions -> BoardState -> Piece -> Point -> Maybe BoardState
-lock dims bst@(BState m) pc@(Piece vs) loc
-  | not $ checkBounds dims loc pc = Nothing
-  | not $ checkOverlap dims bst loc pc = Nothing
-  | True = Just $ BState $ insertPairs kvs m where
-      kvs = zip (map (loc .+^) vs) $ repeat Full
+lock dims bst@(BState stm) pc@(Piece vs) loc
+  | not $ checkBounds     dims loc pc     = Nothing
+  | not $ checkNotOverlap dims bst loc pc = Nothing
+  | otherwise                             = Just $ BState $ insertPairs stm kvs
+  where
+    kvs = zip (map (loc .+^) vs) $ repeat Full
+    insertPairs m []          = m
+    insertPairs m ((k, v):ps) = insertPairs (M.insert k v m) ps
 
-insertPairs :: Ord k => [(k,a)] -> M.Map k a -> M.Map k a
-insertPairs [] m = m
-insertPairs ((key,val) : kvs) m = insertPairs kvs (M.insert key val m)
 
-checkOverlap :: BoardDimensions -> BoardState -> Point -> Piece -> Bool
-checkOverlap gsu gst loc (Piece pcs) = and bools where
-  bools      = map (Just Empty ==) cellStates
-  cellStates = map (accessCell gsu gst) cells
-  cells      = map (loc .+^) pcs
-  
+--------------------------------------------------------------------------------
+------------------------------ Private functions -------------------------------
+--------------------------------------------------------------------------------
 
-checkBounds dims loc (Piece [])     = insideBounds dims loc
-checkBounds dims loc (Piece (v:vs)) = insideBounds dims loc &&
-                                      checkBounds dims (loc .+^ v) (Piece vs)
 
-pointMin :: BoardDimensions -> Point
-pointMin _          = Point 0 0
+-- | Check if the given 'Piece' overlaps any of the currently-full cells
+checkNotOverlap :: BoardDimensions -> BoardState -> Point -> Piece -> Bool
+checkNotOverlap gsu gst loc (Piece pcs) = all isEmpty cellStates
+  where
+    isEmpty x  = x == Just Empty
+    cellStates = map (accessCell gsu gst) cells
+    cells      = map (loc .+^) pcs
 
-pointMax :: BoardDimensions -> Point
-pointMax (BDim w h) = Point w h
+-- | Is a 'Piece' located at a 'Point' within the bounds of the board?
+checkBounds :: BoardDimensions -> Point -> Piece -> Bool
+checkBounds dims loc (Piece pcs) = all inside pcs
+  where
+    inside v = insideBounds dims (loc .+^ v)
 
+-- | Is the given 'Point' within the given 'BoardDimensions'
+insideBounds :: BoardDimensions -> Point -> Bool
 insideBounds dims loc = not $ pointOutside (boardBounds dims) loc
 
-boardBounds :: BoardDimensions -> (Point, Point)
-boardBounds dims = (pointMin dims, pointMax dims)
-
-pointOutside :: (Point, Point) -- ^ Rectangular region
-             -> Point          -- ^ Point to determine if contained with area
-             -> Bool           -- ^ Result
+-- | Is a 'point' outside of the region specified by a pair of 'Point's?
+pointOutside :: (Point, Point) -> Point -> Bool
 pointOutside (Point x1 y1, Point x2 y2) (Point c1 c2)
   | not (within x1 x2 c1) = True
   | not (within y1 y2 c2) = True
@@ -97,3 +127,14 @@ pointOutside (Point x1 y1, Point x2 y2) (Point c1 c2)
   where
     within mn mx val = (mn < val) && (val < mx)
 
+-- | Get the upper left corner of the board with the given 'BoardDimensions'
+pointMin :: BoardDimensions -> Point
+pointMin _          = Point 0 0
+
+-- | Get the lower right corner of the board with the given 'BoardDimensions'
+pointMax :: BoardDimensions -> Point
+pointMax (BDim w h) = Point w h
+
+-- | Get the bounds of the board with the given 'BoardDimensions'
+boardBounds :: BoardDimensions -> (Point, Point)
+boardBounds dims = (pointMin dims, pointMax dims)
