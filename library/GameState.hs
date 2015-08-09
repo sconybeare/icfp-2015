@@ -3,12 +3,12 @@ module GameState ( CellState (..)
                  , accessCell
                  , lock
                  , ACWRotation
-                 , cwRot
+                 , fromACWRot
+                 , acwRot
                  , GameSetup (..)
                  , BoardDimensions (..)
                  , GameState (..)
                  , PieceId (..)
-                 , fromCWRot
                  , Piece (..)
                  ) where
 
@@ -40,11 +40,11 @@ data GameState = GState { getBoardState :: BoardState
 
 newtype PieceId = PieceId Int
 
-newtype ACWRotation = CWRot Int
-cwRot :: Int -> ACWRotation
-cwRot x = CWRot $ x `mod` 6
-fromCWRot :: Integral a => ACWRotation -> a
-fromCWRot (CWRot x) = fromIntegral x
+newtype ACWRotation = ACWRot Int
+acwRot :: Int -> ACWRotation
+acwRot x = ACWRot $ x `mod` 6
+fromACWRot :: Integral a => ACWRotation -> a
+fromACWRot (ACWRot x) = fromIntegral x
 
 accessCell :: BoardDimensions -> BoardState -> Point -> Maybe CellState
 accessCell dim bst pt
