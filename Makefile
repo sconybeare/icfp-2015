@@ -12,11 +12,10 @@ clean: nix-clean
 	if test -d .hpc; then rm -r .hpc; fi
 
 configure:
-	cabal configure --enable-tests
+	cabal configure
 
 haddock:
 	cabal haddock --hyperlink-source
-# dist/doc/html/./index.html
 
 install:
 	cabal sandbox init
