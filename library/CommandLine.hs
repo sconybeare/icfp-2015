@@ -1,5 +1,6 @@
 -- | Process command-line arguments
-module CommandLine (Options (..), handleOptions) where
+module CommandLine (Options (..), getOptions) where
+
 
 --------------------------------------------------------------------------------
 ------------------------------------ Header ------------------------------------
@@ -40,8 +41,8 @@ data Options =
 
 -- | This will take care of option parsing in your main function;
 --   the type says it all, really.
-handleOptions :: (Options -> IO a) -> IO a
-handleOptions main = execParser (info (helper <*> optParser) optInfo) >>= main
+getOptions :: IO Options
+getOptions = execParser (info (helper <*> optParser) optInfo)
   where
     optInfo = fullDesc <> progDesc optDesc <> header optHeader
 

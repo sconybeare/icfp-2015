@@ -5,11 +5,8 @@ module ICFP2015 (module ICFP2015) where
 
 import           CommandLine
 
-mainOpt :: Options -> IO ()
-mainOpt opts = do
-  print opts
-  return ()
-
 -- | Main entry point of application
 main :: IO ()
-main = handleOptions mainOpt
+main = do
+  opts <- getOptions
+  print opts
