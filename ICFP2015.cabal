@@ -38,7 +38,7 @@ library
                       , CommandLine
                       , Render
                       , Parse
-                      , Mock.Random
+                      , Random
     ghc-options:        -Wall
     hs-source-dirs:     library
     default-extensions: OverloadedStrings
