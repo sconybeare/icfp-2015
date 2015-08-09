@@ -15,6 +15,8 @@ import           Data.Maybe          (catMaybes)
 import           Data.Text           (Text, pack)
 import           System.FilePath     hiding ((<.>))
 
+import           Utility             ((<.>))
+
 -- HLint pragmas
 {-# ANN module ("HLint: ignore Redundant bracket" :: String) #-}
 
@@ -26,11 +28,11 @@ import           System.FilePath     hiding ((<.>))
 
 -- | Options specified by the ICFP 2015 problem specification
 data Options =
-  Options { getFiles       :: [FilePath] -- ^ Input files
-          , getTimeLimit   :: Maybe Int  -- ^ # of seconds   available
-          , getMemoryLimit :: Maybe Int  -- ^ # of MB of RAM available
-          , getCores       :: Maybe Int  -- ^ # of cores     available
-          , getPhrases     :: [Text]     -- ^ phrases of power
+  Options { optFiles       :: [FilePath] -- ^ Input files
+          , optTimeLimit   :: Maybe Int  -- ^ # of seconds   available
+          , optMemoryLimit :: Maybe Int  -- ^ # of MB of RAM available
+          , optCores       :: Maybe Int  -- ^ # of cores     available
+          , optPhrases     :: [Text]     -- ^ phrases of power
           } deriving (Eq, Show, Read)
 
 
@@ -116,10 +118,6 @@ optParser = Options
 ------------------------------ Utility functions -------------------------------
 --------------------------------------------------------------------------------
 
-
-(<.>) :: Functor f => (a -> b) -> (c -> f a) -> (c -> f b)
-f <.> g = \x -> f <$> (g x)
-infixr 9 <.>
 
 fileOption :: Mod OptionFields String -> Parser (Maybe FilePath)
 fileOption = validPath <.> strOption

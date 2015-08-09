@@ -4,8 +4,8 @@ module GameState ( CellState       (..)
                  , GameState       (..)
                  , PieceId         (..)
                  , Piece           (..)
-                 , ACWRotation,    fromACWRot, mkACWRot
-                 , BoardState,     accessCell, lock
+                 , ACWRotation,    mkACWRot, fromACWRot
+                 , BoardState,     mkBoard,  accessCell, lock
                  ) where
 
 
@@ -15,9 +15,12 @@ module GameState ( CellState       (..)
 
 
 -- Imports
+import qualified Data.Map.Strict  as M
+
 import           Data.AffineSpace
 import           Data.Map.Strict  (Map)
-import qualified Data.Map.Strict  as M
+
+import           Random
 import           Types            (BVect, Point (..))
 
 
@@ -45,11 +48,11 @@ newtype BoardState = BState (Map Point CellState)
                    deriving (Eq, Show, Read)
 
 -- | Static information for a game
-data GameSetup = GameSetup { getDimensions :: BoardDimensions
-                           , getPieces     :: [Piece]
-                           , getSeed       :: Int
-                           , getLayout     :: BoardState
-                           } deriving (Eq, Show, Read)
+data GameSetup = GSetup { getDimensions :: BoardDimensions
+                        , getPieces     :: [Piece]
+                        , getSeed       :: Int
+                        , getLayout     :: BoardState
+                        } deriving (Eq, Show, Read)
 
 -- | Game state
 data GameState = GState { getBoardState       :: BoardState
@@ -72,6 +75,10 @@ newtype ACWRotation = ACWRot { fromACWRot :: Int
 ------------------------------- Public functions -------------------------------
 --------------------------------------------------------------------------------
 
+
+-- | Create a 'BoardState' from a 'Map' from 'Point's to 'CellState's
+mkBoard :: Map Point CellState -> BoardState
+mkBoard = BState
 
 -- | Turn a number of anticlockwise turns into an 'ACWRotation'
 mkACWRot :: Int -> ACWRotation

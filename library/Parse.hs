@@ -26,23 +26,23 @@ import           Data.Aeson
 
 
 -- | A cell in JSON
-data JSONCell = JSONCell { getX :: Int
-                         , getY :: Int
+data JSONCell = JSONCell { jsonX :: Int
+                         , jsonY :: Int
                          } deriving (Eq, Show, Read)
 
 -- | A piece in JSON
-data JSONPiece = JSONPiece { getMembers :: [JSONCell]
-                           , getPivot   :: JSONCell
+data JSONPiece = JSONPiece { jsonMembers :: [JSONCell]
+                           , jsonPivot   :: JSONCell
                            } deriving (Eq, Show, Read)
 
 -- | All the information retrieved from a JSON input file
-data JSON = JSON { getId           :: Int
-                 , getPieces       :: [JSONPiece]
-                 , getWidth        :: Int
-                 , getHeight       :: Int
-                 , getFilled       :: [JSONCell]
-                 , getSourceLength :: Int
-                 , getSourceSeeds  :: [Int]
+data JSON = JSON { jsonId           :: Int
+                 , jsonPieces       :: [JSONPiece]
+                 , jsonWidth        :: Int
+                 , jsonHeight       :: Int
+                 , jsonFilled       :: [JSONCell]
+                 , jsonSourceLength :: Int
+                 , jsonSourceSeeds  :: [Int]
                  } deriving (Eq, Show, Read)
 
 
