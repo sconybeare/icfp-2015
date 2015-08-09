@@ -1,12 +1,12 @@
 module Hash where
 
-import Data.Bits (Bits, xor)
-import System.Random
-import GameState
-import Data.Map.Lazy as Map (Map, fromList, lookup)
-import Types (Point (..))
-import Data.Monoid (mconcat)
-import Data.Set (empty, member, insert)
+import           Data.Bits     (Bits, xor)
+import           Data.Map.Lazy as Map (Map, fromList, lookup)
+import           Data.Monoid   (mconcat)
+import           Data.Set      (empty, insert, member)
+import           GameState
+import           System.Random
+import           Types         (Point (..))
 
 generateHashes :: (RandomGen g, Random b, Bounded b, Ord b) =>
                   g -> [b]
@@ -21,17 +21,20 @@ filterHashes l = helpFilter empty l where
 
 data StateElement = FilledCell Point
                   | PiecePos Point
-                  | PieceRot CWRotation
+                  | PieceRot ACWRotation
                   | NumPieces Int
 
 generatorKey :: BoardDimensions -> StateElement -> Int
 generatorKey (BDim w h) (FilledCell (Point x y)) = x+w*y `mod` w*h
-generatorKey (BDim w h) (PiecePos (Point x y)) = gk0 + (x+w*y `mod` w*h) where
-  gk0 = w*h
-generatorKey (BDim w h) (PieceRot r) = gk0 + fromCWRot r where
-  gk0 = 2*w*h
-generatorKey (BDim w h) (NumPieces x) = gk0 + x where
-  gk0 = 2*w*h + 6
+generatorKey (BDim w h) (PiecePos (Point x y)) = gk0 + (x+w*y `mod` w*h)
+  where
+    gk0 = w*h
+generatorKey (BDim w h) (PieceRot r) = gk0 + fromACWRot r
+  where
+    gk0 = 2*w*h
+generatorKey (BDim w h) (NumPieces x) = gk0 + x
+  where
+    gk0 = 2*w*h + 6
 
 elems :: BoardDimensions -> GameState -> [StateElement]
 elems (BDim w h) gs = mconcat [fc, pp, pr, np] where

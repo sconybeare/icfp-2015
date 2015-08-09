@@ -1,39 +1,42 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ViewPatterns#-}
+{-# LANGUAGE ViewPatterns          #-}
+
 module Search where
 
-import GameState
-import Types (Trans (..), Turn (..), Vect (..), Point (..))
-import Data.AffineSpace
+import           Data.AffineSpace
+import           GameState
+import           Types            (BVect (..), Point (..), Trans (..),
+                                   Turn (..))
 
 data Move = Shift Trans | Rotate Turn
 
 moveN :: Int -> Maybe Move
-moveN n | 0 <= n
-        , n < 6 = Just $ ((map Shift [E,SE,SW,W]) ++ (map Rotate [ACW,CW])) !! n
-        | otherwise = Nothing
-
+moveN n | 0 <= n, n < 6 = Just $ (shift ++ rot) !! n
+        | otherwise     = Nothing
+  where
+    shift = map Shift [E, SE, SW, W]
+    rot   = map Rotate [ACW, CW]
 
 applyTurn :: Turn -> ACWRotation -> ACWRotation
-applyTurn ACW (fromACWRot->x) = acwRot $ x+1
-applyTurn ACW (fromACWRot->x) = acwRot $ x-1
+applyTurn ACW (fromACWRot->x) = mkACWRot $ x+1
+applyTurn ACW (fromACWRot->x) = mkACWRot $ x-1
 
-applyRot :: ACWRotation -> Vect -> Vect
+applyRot :: ACWRotation -> BVect -> BVect
 applyRot (fromACWRot->angle) v = (iterate rotACW v) !! angle where
-  rotACW (Vect x y) = Vect y (y-x)
+  rotACW (BVect x y) = BVect y (y-x)
 
 applyShift :: Trans -> Point -> Point
-applyShift E  = (.+^ Vect 1 0)
-applyShift SE = (.+^ Vect 1 1)
-applyShift SW = (.+^ Vect 0 1)
-applyShift W  = (.+^ Vect (-1) 0)
+applyShift E  = (.+^ BVect 1 0)
+applyShift SE = (.+^ BVect 1 1)
+applyShift SW = (.+^ BVect 0 1)
+applyShift W  = (.+^ BVect (-1) 0)
 
 applyRotPiece :: ACWRotation -> Piece -> Piece
 applyRotPiece rot (Piece vs) = Piece $ map (applyRot rot) vs
 
 applyTurnPiece :: Turn -> Piece -> Piece
-applyTurnPiece ACW = applyRotPiece (acwRot 1)
-applyTurnPiece CW = applyRotPiece (acwRot (-1))
+applyTurnPiece ACW = applyRotPiece (mkACWRot 1)
+applyTurnPiece CW = applyRotPiece (mkACWRot (-1))
 
 applyMovePiece :: Move -> Piece -> Piece
 applyMovePiece (Rotate r) = applyTurnPiece r
