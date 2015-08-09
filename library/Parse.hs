@@ -1,44 +1,85 @@
 {-# OPTIONS_GHC -fno-warn-unused-imports #-}
-{-# LANGUAGE OverloadedStrings #-}
 
-module Parse where
+module Parse ( JSONCell (..)
+             , JSONPiece (..)
+             , JSON (..)
+             , readJSON
+             ) where
 
-import Data.Aeson
-import Control.Applicative
-import Control.Monad (mzero)
 
-data Input = Input { getId :: Int
-                   , getUnits :: [InputUnit]
-                   , getWidth :: Int
-                   , getHeight :: Int
-                   , getFilled :: [InputCell]
-                   , getSourceLength :: Int
-                   , getSourceSeeds :: [Int]
-                   }
+--------------------------------------------------------------------------------
+------------------------------------ Header ------------------------------------
+--------------------------------------------------------------------------------
 
-data InputCell = InputCell { getX :: Int , getY :: Int }
 
-data InputUnit = InputUnit { getMembers :: [InputCell] , getPivot :: InputCell }
+-- Imports
+import           Control.Applicative ((<*>))
+import           Control.Monad       (mzero)
+import qualified Data.ByteString     as BS (readFile)
 
-instance FromJSON Input where
-  parseJSON (Object v) = Input <$>
-                         v .: "id" <*>
-                         v .: "units" <*>
-                         v .: "width" <*>
-                         v .: "height" <*>
-                         v .: "filled" <*>
-                         v .: "sourceLength" <*>
-                         v .: "sourceSeeds"
-  parseJSON _ =          mzero
+import           Data.Aeson
 
-instance FromJSON InputCell where
-  parseJSON (Object v) = InputCell <$>
-                         v .: "x" <*>
-                         v .: "y"
-  parseJSON _ =          mzero
 
-instance FromJSON InputUnit where
-  parseJSON (Object v) = InputUnit <$>
-                         v .: "members" <*>
-                         v .: "pivot"
-  parseJSON _ =          mzero
+--------------------------------------------------------------------------------
+------------------------------------ Types -------------------------------------
+--------------------------------------------------------------------------------
+
+
+-- | A cell in JSON
+data JSONCell = JSONCell { getX :: Int
+                         , getY :: Int
+                         } deriving (Eq, Show, Read)
+
+-- | A piece in JSON
+data JSONPiece = JSONPiece { getMembers :: [JSONCell]
+                           , getPivot   :: JSONCell
+                           } deriving (Eq, Show, Read)
+
+-- | All the information retrieved from a JSON input file
+data JSON = JSON { getId           :: Int
+                 , getPieces       :: [JSONPiece]
+                 , getWidth        :: Int
+                 , getHeight       :: Int
+                 , getFilled       :: [JSONCell]
+                 , getSourceLength :: Int
+                 , getSourceSeeds  :: [Int]
+                 } deriving (Eq, Show, Read)
+
+
+--------------------------------------------------------------------------------
+---------------------------------- Functions -----------------------------------
+--------------------------------------------------------------------------------
+
+
+-- | Read JSON from a file and strictly decode it into a 'JSON'
+readJSON :: FilePath -> IO (Maybe JSON)
+readJSON path = decodeStrict' <$> BS.readFile path
+
+
+--------------------------------------------------------------------------------
+---------------------------------- Instances -----------------------------------
+--------------------------------------------------------------------------------
+
+
+-- | Parse a 'JSON'
+instance FromJSON JSON where
+  parseJSON (Object v) = JSON <$> v .: "id"
+                              <*> v .: "units"
+                              <*> v .: "width"
+                              <*> v .: "height"
+                              <*> v .: "filled"
+                              <*> v .: "sourceLength"
+                              <*> v .: "sourceSeeds"
+  parseJSON _          = mzero
+
+-- | Parse a 'JSONCell'
+instance FromJSON JSONCell where
+  parseJSON (Object v) = JSONCell <$> v .: "x"
+                                  <*> v .: "y"
+  parseJSON _          = mzero
+
+-- | Parse a 'JSONPiece'
+instance FromJSON JSONPiece where
+  parseJSON (Object v) = JSONPiece <$> v .: "members"
+                                   <*> v .: "pivot"
+  parseJSON _          = mzero
