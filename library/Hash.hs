@@ -6,10 +6,18 @@ import GameState
 import Data.Map.Lazy as Map (Map, fromList, lookup)
 import Types (Point (..))
 import Data.Monoid (mconcat)
+import Data.Set (empty, member, insert)
 
-generateHashes :: (RandomGen g, Random b, Bounded b) =>
+generateHashes :: (RandomGen g, Random b, Bounded b, Ord b) =>
                   g -> [b]
-generateHashes = randomRs (minBound, maxBound)
+generateHashes = filterHashes . randomRs (minBound, maxBound)
+
+filterHashes :: Ord b => [b] -> [b]
+filterHashes l = helpFilter empty l where
+  helpFilter _ [] = []
+  helpFilter s (x:xs) = if member x s
+                        then helpFilter s xs
+                        else x : helpFilter (insert x s) xs
 
 data StateElement = FilledCell Point
                   | PiecePos Point
@@ -32,7 +40,7 @@ elems (BDim w h) gs = mconcat [fc, pp, pr, np] where
   pr = [PieceRot $ getPieceOrientation gs]
   np = [NumPieces $ getPieceCount gs]
 
-populateHashMap :: (RandomGen g, Random b, Bounded b) =>
+populateHashMap :: (RandomGen g, Random b, Bounded b, Ord b) =>
                    g -> Map Int b
 populateHashMap gen = fromList $ zip [0..] $ generateHashes gen
 
