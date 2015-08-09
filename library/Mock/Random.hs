@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
+
 -- | Generate random numbers for the mock server
 module Mock.Random (LCGGen, mkLCGGen) where
 
@@ -21,7 +23,7 @@ newtype LCGGen = LCGGen [Int] deriving (Eq, Show, Read)
 instance RandomGen LCGGen where
   next (LCGGen (x:xs)) = (x, LCGGen xs)
   genRange _           = (0, lcgModulus - 1)
-  split (LCGGen k l)   = (LCGGen k (odds l), LCGGen (evens l))
+  split (LCGGen l)     = (LCGGen (odds l), LCGGen (evens l))
 
 
 --------------------------------------------------------------------------------
@@ -34,7 +36,7 @@ mkLCGGen :: Int -> LCGGen
 mkLCGGen = LCGGen . randomList
 
 -- | Infinite list of random numbers generated from the given seed
-randomList :: Integral i => i -> [i]
+randomList :: Int -> [Int]
 randomList seed = r : randomList r
   where r = (seed * lcgMultiplier + lcgIncrement) `rem` lcgModulus
 
@@ -44,7 +46,7 @@ randomList seed = r : randomList r
 --------------------------------------------------------------------------------
 
 
-lcgModulus, lcgMultiplier, lcgIncrement :: Integral i => i
+lcgModulus, lcgMultiplier, lcgIncrement :: Int
 lcgModulus    = 2 ^ 32
 lcgMultiplier = 1103515245
 lcgIncrement  = 12345
