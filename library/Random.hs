@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
 -- | Generate random numbers
-module Random (LCGGen, mkLCGGen) where
+module Random (LCGGen, mkLCGGen, randomList) where
 
 --------------------------------------------------------------------------------
 ------------------------------------ Header ------------------------------------
@@ -17,7 +17,7 @@ import           System.Random
 --------------------------------------------------------------------------------
 
 
-newtype LCGGen = LCGGen [Int] deriving (Eq, Show, Read)
+newtype LCGGen = LCGGen [Int] deriving (Eq)
 
 instance RandomGen LCGGen where
   next (LCGGen (x:xs)) = (x, LCGGen xs)

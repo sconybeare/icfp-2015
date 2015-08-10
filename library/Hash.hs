@@ -41,7 +41,7 @@ elems (BDim w h) gs = mconcat [fc, pp, pr, np] where
   fc = map FilledCell [Point x y | y <- [0..(h-1)], x <- [0..(w-1)]]
   pp = [PiecePos $ getPieceLoc gs]
   pr = [PieceRot $ getPieceOrientation gs]
-  np = [NumPieces $ getPieceCount gs]
+  np = [NumPieces $ getPieceCounter gs]
 
 populateHashMap :: (RandomGen g, Random b, Bounded b, Ord b) =>
                    g -> Map Int b

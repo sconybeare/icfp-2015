@@ -1,5 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE GADTs#-}
 
 module Search where
 
@@ -7,6 +9,7 @@ import           Data.AffineSpace
 import           GameState
 import           Types            (BVect (..), Point (..), Trans (..),
                                    Turn (..))
+import           System.Random
 
 data Move = Shift Trans | Rotate Turn
 
@@ -19,7 +22,7 @@ moveN n | 0 <= n, n < 6 = Just $ (shift ++ rot) !! n
 
 applyTurn :: Turn -> ACWRotation -> ACWRotation
 applyTurn ACW (fromACWRot->x) = mkACWRot $ x+1
-applyTurn ACW (fromACWRot->x) = mkACWRot $ x-1
+applyTurn  CW (fromACWRot->x) = mkACWRot $ x-1
 
 applyRot :: ACWRotation -> BVect -> BVect
 applyRot (fromACWRot->angle) v = (iterate rotACW v) !! angle where
@@ -57,13 +60,49 @@ applyMoveAngle (Rotate r) = applyTurn r
 data PieceUpdate = SamePiece | NewPiece
 
 applyMoveBoard :: BoardDimensions -> BoardState -> Piece -> Point -> ACWRotation
-                  -> Move -> Maybe (PieceUpdate, BoardState)
+                  -> Move -> Maybe (BoardState, PieceUpdate)
 applyMoveBoard dim bst pc pt rot mov =
-  case (lockCurr, lockNext) of
+  case (lockCurrMaybe, lockNextMaybe) of
    (Nothing, _) -> Nothing
-   (Just _, Nothing) -> lockCurr >>= Just . curry id SamePiece
-   (Just _, Just _) -> lockNext >>= Just . curry id NewPiece
-  where lockCurr = lockOri dim bst pc pt rot
-        lockNext = lock dim bst newPc newPt
+   (Just lockCurr, Nothing) -> Just (lockCurr, NewPiece)
+   (Just lockNext, Just _) -> Just (lockNext, SamePiece)
+  where lockCurrMaybe = lockOri dim bst pc pt rot
+        lockNextMaybe = lock dim bst newPc newPt
         newPc = applyMovePiece mov pc
         newPt = applyMovePoint mov pt
+
+pieceSpawnLoc :: BoardDimensions -> Piece -> Point
+pieceSpawnLoc (BDim bWidth _) (Piece vs) = Point x y
+  where y = negate $ minimum $ map (getY . (Point 0 0 .+^)) vs
+        x = startingPXMin - pxMin
+        startingPXMin = (bWidth - pWidth) `div` 2
+        pWidth = pxMax - pxMin
+        pxMax = maximum pxs
+        pxMin = minimum pxs
+        pxs = map (getX . ((Point 0 y) .+^)) vs
+        
+
+applyMoveGameState :: GameSetup -> GameState -> Move -> Maybe GameState
+applyMoveGameState gsu gst mov = 
+  case applyMoveBoard dim bst pc loc ang mov of
+   Just (newBoard, NewPiece) -> Just $ GState newBoard (ct+1) (PieceId newPieceId) spawnLoc (mkACWRot 0) gen'
+   Just (newBoard, SamePiece) -> Just $ GState newBoard ct pcid newLoc newAng gen'
+   Nothing -> Nothing
+  where
+    GSetup dim pcs _ _ = gsu
+--    GState bst ct pcid loc ang gen = gst
+    bst = getBoardState gst
+    ct  = getPieceCounter gst
+    pcid= getPieceId gst
+    loc = getPieceLoc gst
+    ang = getPieceOrientation gst
+    gen = getGenerator gst
+    (newPieceId, gen') = random gen
+    spawnLoc = pieceSpawnLoc dim newPiece
+    pc = pcs !! (\(PieceId x) -> x) pcid
+    newPiece = pcs !! newPieceId
+    newLoc = applyMovePoint mov loc
+    newAng = applyMoveAngle mov ang
+
+approxScore :: GameSetup -> GameState -> Int
+approxScore gsu gst = undefined

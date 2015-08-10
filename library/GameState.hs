@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
 module GameState ( CellState       (..)
                  , GameSetup       (..)
                  , BoardDimensions (..)
@@ -6,6 +8,7 @@ module GameState ( CellState       (..)
                  , Piece           (..)
                  , ACWRotation,    mkACWRot, fromACWRot
                  , BoardState,     mkBoard,  accessCell, lock
+                 , Generator       (..)
                  ) where
 
 
@@ -21,6 +24,7 @@ import           Data.AffineSpace
 import           Data.Map.Strict  (Map)
 
 import           Random
+import           System.Random
 import           Types            (BVect, Point (..))
 
 
@@ -54,13 +58,17 @@ data GameSetup = GSetup { getDimensions :: BoardDimensions
                         , getLayout     :: BoardState
                         } deriving (Eq, Show, Read)
 
+-- | Random generator existential type
+data Generator = forall g. RandomGen g => Generator g
+
 -- | Game state
 data GameState = GState { getBoardState       :: BoardState
-                        , getPieceCount       :: Int
+                        , getPieceCounter     :: Int
                         , getPieceId          :: PieceId
                         , getPieceLoc         :: Point
                         , getPieceOrientation :: ACWRotation
-                        } deriving (Eq, Show, Read)
+                        , getGenerator        :: Generator
+                        }
 
 -- | ID of a Piece
 newtype PieceId = PieceId Int
@@ -69,6 +77,21 @@ newtype PieceId = PieceId Int
 -- | Anticlockwise rotation amount
 newtype ACWRotation = ACWRot { fromACWRot :: Int
                              } deriving (Eq, Show, Read)
+
+
+--------------------------------------------------------------------------------
+---------------------------------- Instances -----------------------------------
+--------------------------------------------------------------------------------
+
+
+instance Random PieceId where
+  random g = (PieceId $ i, g') where (i,g') = next g
+  randomR _ = random
+
+instance RandomGen Generator where
+  next (Generator gen) = (x,Generator y) where (x,y) = next gen
+  genRange (Generator gen) = genRange gen
+  split (Generator gen) = (Generator x, Generator y) where (x,y) = split gen
 
 
 --------------------------------------------------------------------------------
