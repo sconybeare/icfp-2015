@@ -23,7 +23,6 @@ import qualified Data.Map.Strict  as M
 import           Data.AffineSpace
 import           Data.Map.Strict  (Map)
 
-import           Random
 import           System.Random
 import           Types            (BVect, Point (..))
 
@@ -76,7 +75,7 @@ newtype PieceId = PieceId Int
 
 -- | Anticlockwise rotation amount
 newtype ACWRotation = ACWRot { fromACWRot :: Int
-                             } deriving (Eq, Show, Read)
+                             } deriving (Eq, Ord, Show, Read)
 
 
 --------------------------------------------------------------------------------

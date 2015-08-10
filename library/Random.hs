@@ -56,6 +56,13 @@ lcgIncrement  = 12345
 --------------------------------------------------------------------------------
 
 
-odds, evens :: [a] -> [a]
-odds  (a:_:xs) = a : odds  xs
-evens (_:b:xs) = b : evens xs
+-- | All the odd-numbered elements of a (potentially infinite) list
+odds :: [a] -> [a]
+odds []       = []
+odds [a]      = [a]
+odds (a:_:xs) = a : odds xs
+
+-- | All the even-numbered elements of a (potentially infinite) list
+evens :: [a] -> [a]
+evens []     = []
+evens (_:xs) = evens xs

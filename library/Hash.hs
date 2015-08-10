@@ -1,53 +1,59 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE PatternSynonyms #-}
+
 module Hash where
 
 import           Data.Bits     (Bits, xor)
 import           Data.Map.Lazy as Map (Map, fromList, lookup)
-import           Data.Monoid   (mconcat)
 import           Data.Set      (empty, insert, member)
 import           GameState
 import           System.Random
 import           Types         (Point (..))
 
-generateHashes :: (RandomGen g, Random b, Bounded b, Ord b) =>
-                  g -> [b]
+type RandomKey a = (Random a, Bounded a, Ord a)
+
+generateHashes :: (RandomGen g, RandomKey b) => g -> [b]
 generateHashes = filterHashes . randomRs (minBound, maxBound)
 
 filterHashes :: Ord b => [b] -> [b]
-filterHashes l = helpFilter empty l where
-  helpFilter _ [] = []
-  helpFilter s (x:xs) = if member x s
-                        then helpFilter s xs
-                        else x : helpFilter (insert x s) xs
+filterHashes = helpFilter empty
+  where
+    helpFilter _ []     = []
+    helpFilter s (x:xs) = if member x s
+                          then helpFilter s xs
+                          else x : helpFilter (insert x s) xs
 
-data StateElement = FilledCell Point
-                  | PiecePos Point
-                  | PieceRot ACWRotation
-                  | NumPieces Int
+data StateElement = SFilledCell Point
+                  | SPiecePos Point
+                  | SPieceRot ACWRotation
+                  | SNumPieces Int
+                  deriving (Eq, Ord, Show, Read)
+
+pattern SFilled x y = SFilledCell (Point x y)
+pattern SFloat  x y = SPiecePos   (Point x y)
 
 generatorKey :: BoardDimensions -> StateElement -> Int
-generatorKey (BDim w h) (FilledCell (Point x y)) = x+w*y `mod` w*h
-generatorKey (BDim w h) (PiecePos (Point x y)) = gk0 + (x+w*y `mod` w*h)
-  where
-    gk0 = w*h
-generatorKey (BDim w h) (PieceRot r) = gk0 + fromACWRot r
-  where
-    gk0 = 2*w*h
-generatorKey (BDim w h) (NumPieces x) = gk0 + x
-  where
-    gk0 = 2*w*h + 6
+generatorKey (BDim w h) = generatorKey' w h
+
+generatorKey' :: Int -> Int -> StateElement -> Int
+generatorKey' w h (SFilled x y)  =                x + (w * y) `mod` (w * h)
+generatorKey' w h (SFloat  x y)  = (w * h)     + (x + (w * y) `mod` (w * h))
+generatorKey' w h (SPieceRot r)  = (2 * w * h) + fromACWRot r
+generatorKey' w h (SNumPieces x) = (2 * w * h) + 6 + x
 
 elems :: BoardDimensions -> GameState -> [StateElement]
-elems (BDim w h) gs = mconcat [fc, pp, pr, np] where
-  fc = map FilledCell [Point x y | y <- [0..(h-1)], x <- [0..(w-1)]]
-  pp = [PiecePos $ getPieceLoc gs]
-  pr = [PieceRot $ getPieceOrientation gs]
-  np = [NumPieces $ getPieceCounter gs]
+elems (BDim w h) gs = concat [fc, pp, pr, np]
+  where
+    fc = map SFilledCell [Point x y | y <- [0 .. h - 1], x <- [0 .. w - 1]]
+    pp = [SPiecePos $ getPieceLoc gs]
+    pr = [SPieceRot $ getPieceOrientation gs]
+    np = [SNumPieces $ getPieceCounter gs]
 
-populateHashMap :: (RandomGen g, Random b, Bounded b, Ord b) =>
-                   g -> Map Int b
+populateHashMap :: (RandomGen g, RandomKey b) => g -> Map Int b
 populateHashMap gen = fromList $ zip [0..] $ generateHashes gen
 
 hashState :: Bits b => BoardDimensions -> Map Int b -> GameState -> Maybe b
-hashState bd m gs = sequence generators >>= (Just . foldl1 xor) where
-  generators = map (flip Map.lookup m) genKeys
-  genKeys = map (generatorKey bd) $ elems bd gs
+hashState bd m gs = sequence generators >>= (Just . foldl1 xor)
+  where
+    generators = map (`Map.lookup` m) genKeys
+    genKeys = map (generatorKey bd) $ elems bd gs
