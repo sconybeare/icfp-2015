@@ -1,3 +1,7 @@
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE GADTs#-}
+{-# LANGUAGE RankNTypes#-}
+
 module GameState ( CellState       (..)
                  , GameSetup       (..)
                  , BoardDimensions (..)
@@ -6,6 +10,7 @@ module GameState ( CellState       (..)
                  , Piece           (..)
                  , ACWRotation,    fromACWRot, mkACWRot
                  , BoardState,     accessCell, lock
+                 , Generator       (..)
                  ) where
 
 
@@ -19,6 +24,8 @@ import           Data.AffineSpace
 import           Data.Map.Strict  (Map)
 import qualified Data.Map.Strict  as M
 import           Types            (BVect, Point (..))
+import           System.Random
+import Mock.Random
 
 
 --------------------------------------------------------------------------------
@@ -45,26 +52,53 @@ newtype BoardState = BState (Map Point CellState)
                    deriving (Eq, Show, Read)
 
 -- | Static information for a game
-data GameSetup = GameSetup { getDimensions :: BoardDimensions
+data GameSetup = GSetup    { getDimensions :: BoardDimensions
                            , getPieces     :: [Piece]
                            , getSeed       :: Int
                            , getLayout     :: BoardState
                            } deriving (Eq, Show, Read)
 
 -- | Game state
+-- data GameState where
+--   GState :: BoardState
+--                         -> Int
+--                         -> PieceId
+--                         -> Point
+--                         -> ACWRotation
+--                         -> Generator
+--                         -> GameState
+data Generator = forall g. RandomGen g => Generator g
+instance RandomGen Generator where
+  next (Generator gen) = (x,Generator y) where (x,y) = next gen
+  genRange (Generator gen) = genRange gen
+  split (Generator gen) = (Generator x, Generator y) where (x,y) = split gen
+-- st = GState u u u u u (Generator $ mkLCGGen 0)
+--   where u = undefined
+-- getBoardState       (GState x _ _ _ _ _) = x
+-- getPieceCounter     (GState _ x _ _ _ _) = x
+-- getPieceId          (GState _ _ x _ _ _) = x
+-- getPieceLoc         (GState _ _ _ x _ _) = x 
+-- getPieceOrientation (GState _ _ _ _ x _) = x
+-- getGenerator        (GState _ _ _ _ _ x) = x 
+
 data GameState = GState { getBoardState       :: BoardState
-                        , getPieceCount       :: Int
+                        , getPieceCounter     :: Int
                         , getPieceId          :: PieceId
                         , getPieceLoc         :: Point
                         , getPieceOrientation :: ACWRotation
-                        } deriving (Eq, Show, Read)
+                        , getGenerator        :: Generator
+                        }
 
 -- | ID of a Piece
 newtype PieceId = PieceId Int
                 deriving (Eq, Show, Read)
+instance Random PieceId where
+  random g = (PieceId $ i, g') where (i,g') = next g
+  randomR _ = random
 
 -- | Anticlockwise rotation amount
 newtype ACWRotation = ACWRot { fromACWRot :: Int
+
                              } deriving (Eq, Show, Read)
 
 

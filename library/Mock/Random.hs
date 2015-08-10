@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
 -- | Generate random numbers for the mock server
-module Mock.Random (LCGGen, mkLCGGen) where
+module Mock.Random (LCGGen, mkLCGGen, randomList) where
 
 
 --------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ import           System.Random
 --------------------------------------------------------------------------------
 
 
-newtype LCGGen = LCGGen [Int] deriving (Eq, Show, Read)
+newtype LCGGen = LCGGen [Int] deriving (Eq)
 
 instance RandomGen LCGGen where
   next (LCGGen (x:xs)) = (x, LCGGen xs)
