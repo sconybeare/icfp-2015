@@ -42,12 +42,12 @@ generatorKey' w h (SPieceRot r)  = (2 * w * h) + fromACWRot r
 generatorKey' w h (SNumPieces x) = (2 * w * h) + 6 + x
 
 elems :: BoardDimensions -> GameState -> [StateElement]
-elems (BDim w h) gs = concat [fc, pp, pr, np]
+elems (BDim w h) gs = pp : pr : np : fc
   where
     fc = map SFilledCell [Point x y | y <- [0 .. h - 1], x <- [0 .. w - 1]]
-    pp = [SPiecePos $ getPieceLoc gs]
-    pr = [SPieceRot $ getPieceOrientation gs]
-    np = [SNumPieces $ getPieceCounter gs]
+    pp = SPiecePos  $ getPieceLoc gs
+    pr = SPieceRot  $ getPieceOrientation gs
+    np = SNumPieces $ getPieceCounter gs
 
 populateHashMap :: (RandomGen g, RandomKey b) => g -> Map Int b
 populateHashMap gen = fromList $ zip [0..] $ generateHashes gen
